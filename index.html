@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hybrid Placement | Mythic SDK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="hdr">
+  <a class="logo" href="https://www.mythic.ai/" aria-label="Mythic"><img src="assets/mythic-logo.png" alt="Mythic"></a>
+  <nav class="nav">
+    <a href="#">Technology <svg viewBox="0 0 16 16"><path d="M3 6l5 5 5-5"/></svg></a>
+    <a href="#">Products <svg viewBox="0 0 16 16"><path d="M3 6l5 5 5-5"/></svg></a>
+    <a href="#">Solutions <svg viewBox="0 0 16 16"><path d="M3 6l5 5 5-5"/></svg></a>
+    <a href="#">Company <svg viewBox="0 0 16 16"><path d="M3 6l5 5 5-5"/></svg></a>
+  </nav>
+  <a class="pill" href="https://www.mythic.ai/inquiry">Book a demo</a>
+</header>
+<div class="subnav"><div class="sub-in">
+  <span class="crumb">Mythic SDK</span>
+  <a href="#">Optimization Suite</a><a href="#">Graph Compiler</a><a href="#" class="on">Hybrid Placement <i class="tag">Preview</i></a><a href="#">Host Runtime</a>
+  <button class="pill ghost" id="exportBtn">Export placement</button>
+</div></div>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow blue">Hybrid placement &middot; Mythic Vanguard</div>
+      <h1>zero_dce on Vanguard,<br><span>placed by guarantee.</span></h1>
+      <p class="lede">Each layer goes to the analog die (one or two flash cells per weight) or the digital die. The planner picks the cheapest placement that is <b>certified on simulated chips</b>: at most 5% of chips fall below the quality target after 10 years at 105&nbsp;&deg;C, with 95% confidence.</p>
+      <div class="ctl">
+        <label>Quality target <select id="targetSel"></select></label>
+        <label>Corner <select id="cornerSel" disabled><option>10 years at 105 &deg;C</option></select></label>
+      </div>
+    </div>
+    <div class="hero-side" id="heroSide">
+      <div class="hs-row"><span>Model</span><b>Zero-DCE &middot; 7 conv layers &middot; 79,416 params</b></div>
+      <div class="hs-row"><span>Target</span><b>Vanguard &middot; analog die + digital die</b></div>
+      <div class="hs-row"><span>Search</span><b id="searchInfo">&hellip;</b></div>
+      <div class="hs-row"><span>Certification</span><b id="verifyInfo">&hellip;</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="wrap stat-grid">
+    <div class="stat"><div class="num" id="sPower">&ndash;</div><div class="lbl">mW at 1080p30</div><div class="sub" id="sPowerSub">&nbsp;</div></div>
+    <div class="stat"><div class="num" id="sX">&ndash;</div><div class="lbl">less energy</div><div class="sub" id="sXSub">&nbsp;</div></div>
+    <div class="stat"><div class="num" id="sChips">&ndash;</div><div class="lbl">chips at target</div><div class="sub" id="sChipsSub">&nbsp;</div></div>
+    <div class="stat"><div class="num" id="sNaive">&ndash;</div><div class="lbl">miss, average-chip plan</div><div class="sub" id="sNaiveSub">&nbsp;</div></div>
+  </div>
+</section>
+
+<section class="cream">
+  <div class="wrap">
+    <div class="eyebrow blue">The placement</div>
+    <h2>Analog where analog holds up. <span>Digital where it doesn't.</span></h2>
+    <div class="card diag-card"><svg id="diagram" viewBox="0 0 1160 330" aria-label="Layer placement diagram"></svg><div class="diag-sum" id="diagSum"></div></div>
+    <table class="tbl" id="layerTbl">
+      <thead><tr><th>Layer</th><th>Shape</th><th>MACs / pixel</th><th>Loss if analog<br><small>alone, 1 cell &middot; 2 cells</small></th><th>Placement</th><th>Energy / pixel</th><th>Share</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="fine" id="tblNote"></p>
+  </div>
+</section>
+
+<section class="cream alt">
+  <div class="wrap">
+    <div class="eyebrow blue">Certification</div>
+    <h3>Walk down the frontier until a plan can't be certified</h3>
+    <p class="body lim" id="ladNote"></p>
+    <div class="ladder-wrap"><table class="tbl small" id="ladTbl"><thead><tr><th>#</th><th>Placement <small>conv1 &rarr; conv7</small></th><th>mW at 1080p30</th><th>Predicted p95</th><th>Chips below target</th><th>p-value</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+    <div class="two mt2">
+      <div class="card"><div class="chart"><canvas id="histChart"></canvas></div></div>
+      <div>
+        <div class="eyebrow blue">The certified plan</div>
+        <h3 id="histTitle">100 chips at the worst corner</h3>
+        <p class="body" id="verNote"></p>
+        <div class="btn-row"><button class="pill dark" id="rerunBtn">Re-simulate in browser</button><span id="rerunStatus" class="fine"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cream">
+  <div class="wrap">
+    <div class="eyebrow blue">Average chip vs. certified</div>
+    <h3>Same targets, 150 chips neither planner saw</h3>
+    <table class="tbl small" id="holdTbl"><thead><tr><th>Target</th><th>Average-chip plan</th><th>mW</th><th>Below target</th><th>Certified plan</th><th>mW</th><th>Below target</th><th>95% bound</th></tr></thead><tbody></tbody></table>
+    <div class="two mt2">
+      <div><h3 class="sm">Power for each guarantee</h3><p class="body" id="holdNote"></p></div>
+      <div class="card"><div class="chart short"><canvas id="frontChart"></canvas></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cream alt">
+  <div class="wrap">
+    <div class="eyebrow blue">Same chip, same image</div>
+    <h3>What an end-of-life chip actually outputs</h3>
+    <div class="imgs four" id="imgs">
+      <figure><canvas id="cIn" width="192" height="144"></canvas><figcaption>Low-light input</figcaption></figure>
+      <figure><canvas id="cRef" width="192" height="144"></canvas><figcaption>FP32 reference output</figcaption></figure>
+      <figure><canvas id="cA" width="192" height="144"></canvas><figcaption id="capA">All-analog chip</figcaption></figure>
+      <figure><canvas id="cP" width="192" height="144"></canvas><figcaption id="capP">Certified plan</figcaption></figure>
+    </div>
+    <div class="img-ctl"><label>Image <select id="imgSel"></select></label><label>Chip <select id="chipSel"></select></label><span class="fine" id="imgNote"></span></div>
+  </div>
+</section>
+
+<section class="cream">
+  <div class="wrap">
+    <div class="eyebrow blue">Corners</div>
+    <h3>Worst of 40 chips, by operating condition</h3>
+    <table class="tbl small" id="cornerTbl"><thead><tr><th>Placement</th><th>New, 25 &deg;C</th><th>5 years at 85 &deg;C</th><th>10 years at 105 &deg;C</th><th>mW at 1080p30</th></tr></thead><tbody></tbody></table>
+    <p class="fine" id="cornerNote"></p>
+  </div>
+</section>
+
+<footer class="ftr">
+  <img src="assets/mythic-logo.png" alt="Mythic" class="flogo">
+  <div class="fcols"><span>Technology</span><span>Products</span><span>Solutions</span><span>Company</span></div>
+  <div class="disc">Unofficial concept demo by Mohith Gajjela. Not affiliated with Mythic. Synthetic data: the chip error and energy models are assumptions, not Mythic measurements. Public model and images: Zero-DCE weights and DICM/LIME low-light test images from the Zero-DCE authors (Guo et al., CVPR 2020), CC BY-NC 4.0.</div>
+</footer>
+
+<script src="data/weights.js"></script>
+<script src="data/images.js"></script>
+<script src="data/plan.js"></script>
+<script src="core/hybrid.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
