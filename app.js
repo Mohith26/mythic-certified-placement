@@ -276,6 +276,8 @@
 
   async function boot() {
     st.data = window.PLAN || (await fetch('data/plan.json').then((r) => r.json()));
+    const q = new URLSearchParams(location.search);
+    if (q.get('t') && st.data.targets.includes(+q.get('t'))) st.target = +q.get('t');
     st.model = H.loadModel(window.ZDCE_WEIGHTS);
     st.images = window.ZDCE_IMAGES.map(H.loadImage);
     st.calib = H.calibrate(st.model, st.images.filter((i) => i.split === 'calib' && i.w === 64));
@@ -289,6 +291,7 @@
     render();
     await tick();
     await renderImages();
+    if (q.get('rerun')) await rerun();
   }
   $('targetSel').addEventListener('change', async (e) => { st.target = +e.target.value; render(); await renderImages(); });
   $('imgSel').addEventListener('change', renderImages);

@@ -153,3 +153,4 @@ h3.sm { font-size: 22px; margin-top: 0; }
 .cream h3.sm { margin-top: 4px; }
 table.tbl th small { display: inline; margin-left: 6px; color: #8c8276; }
 .two { align-items: start; }
+.pill { white-space: nowrap; }
